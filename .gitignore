@@ -1,1 +1,32 @@
+# Byte-compiled / optimizados y cachés de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Carpetas de caché de herramientas
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Archivos de entorno con credenciales
+.env
+.env.*
 BackendProyecto/.env
+
+# Bases de datos y logs locales
+*.sqlite3
+*.log
+
+# Archivos de IDE y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
