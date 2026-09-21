@@ -1,0 +1,8 @@
+django
+djangorestframework
+drf-spectacular
+python-dotenv
+pyodbc
+argon2-cffi
+pyjwt
+
