@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSedes, createSede } from '../services/sedeService';
 
-const SedeList = () => {
+const SedeList = ({ canAdd = true }) => {
   const [sedes, setSedes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -76,9 +76,11 @@ const SedeList = () => {
             Listado y consulta de sedes registradas en SQL Server
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Nueva Sede
-        </button>
+        {canAdd && (
+          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+            + Nueva Sede
+          </button>
+        )}
       </div>
 
       <div className="users-toolbar">
@@ -126,7 +128,7 @@ const SedeList = () => {
         </div>
       )}
 
-      {isModalOpen && (
+      {canAdd && isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>Registrar Nueva Sede</h3>

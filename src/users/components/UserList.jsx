@@ -3,7 +3,7 @@ import { useUsers } from '../hooks/useUsers';
 import UserModal from './UserModal';
 import './UserList.css';
 
-const UserList = () => {
+const UserList = ({ canAdd = true }) => {
   const {
     users,
     loading,
@@ -25,9 +25,11 @@ const UserList = () => {
             Lista obtenida directamente desde la base de datos (SQL Server)
           </p>
         </div>
-        <button className="btn-primary" onClick={openModalForCreate}>
-          + Nuevo Empleado
-        </button>
+        {canAdd && (
+          <button className="btn-primary" onClick={openModalForCreate}>
+            + Nuevo Empleado
+          </button>
+        )}
       </div>
 
       <div className="users-toolbar">
@@ -87,11 +89,13 @@ const UserList = () => {
         </div>
       )}
 
-      <UserModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSave={handleSaveUser}
-      />
+      {canAdd && (
+        <UserModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          onSave={handleSaveUser}
+        />
+      )}
     </div>
   );
 };

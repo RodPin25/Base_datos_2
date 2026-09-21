@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getRoles, createRol } from '../services/rolService';
 
-const RolList = () => {
+const RolList = ({ canAdd = true }) => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,9 +66,11 @@ const RolList = () => {
             Listado y consulta de roles del sistema en SQL Server
           </p>
         </div>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Nuevo Rol
-        </button>
+        {canAdd && (
+          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
+            + Nuevo Rol
+          </button>
+        )}
       </div>
 
       <div className="users-toolbar">
@@ -116,7 +118,7 @@ const RolList = () => {
         </div>
       )}
 
-      {isModalOpen && (
+      {canAdd && isModalOpen && (
         <div className="modal-overlay">
           <div className="modal-card">
             <h3>Registrar Nuevo Rol</h3>
