@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getUsers, createUser, updateUser, deleteUser } from '../services/userService';
+import { getUsers, createUser } from '../services/userService';
 
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -9,16 +9,16 @@ export const useUsers = () => {
   // Estados para el Modal y búsqueda
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null); // Si es null es Creación, si tiene datos es Edición
 
-  // Cargar usuarios al montar el componente
+  // Cargar empleados al montar el componente
   const fetchUsersData = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await getUsers();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Error al cargar empleados desde la base de datos');
     } finally {
       setLoading(false);
     }
@@ -28,53 +28,38 @@ export const useUsers = () => {
     fetchUsersData();
   }, []);
 
-  // Manejar Guardar (Crear o Editar)
+  // Manejar Crear Empleado
   const handleSaveUser = async (userData) => {
     try {
-      if (currentUser) {
-        await updateUser(currentUser.id, userData);
-      } else {
-        await createUser(userData);
-      }
-      fetchUsersData(); // Recargar lista
+      const resp = await createUser(userData);
+      alert(resp.Mensaje || 'Empleado creado exitosamente');
+      await fetchUsersData(); // Recargar lista
       closeModal();
     } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  // Manejar Eliminar
-  const handleDeleteUser = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este usuario?')) {
-      try {
-        await deleteUser(id);
-        setUsers(users.filter(user => user.id !== id));
-      } catch (err) {
-        alert(err.message);
-      }
+      alert(err.message || 'Error al registrar empleado');
     }
   };
 
   const openModalForCreate = () => {
-    setCurrentUser(null);
-    setIsModalOpen(true);
-  };
-
-  const openModalForEdit = (user) => {
-    setCurrentUser(user);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setCurrentUser(null);
   };
 
-  // Filtrar usuarios por nombre o correo
-  const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes(search.toLowerCase()) ||
-    user.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filtrar empleados por nombre, apellido, correo, usuario, sede o rol
+  const filteredUsers = users.filter((user) => {
+    const term = search.toLowerCase();
+    const fullName = `${user.Nombres || ''} ${user.Apellidos || ''}`.toLowerCase();
+    return (
+      fullName.includes(term) ||
+      (user.Correo && user.Correo.toLowerCase().includes(term)) ||
+      (user.Usuario && user.Usuario.toLowerCase().includes(term)) ||
+      (user.SedeNombre && user.SedeNombre.toLowerCase().includes(term)) ||
+      (user.RolNombre && user.RolNombre.toLowerCase().includes(term))
+    );
+  });
 
   return {
     users: filteredUsers,
@@ -83,11 +68,9 @@ export const useUsers = () => {
     search,
     setSearch,
     isModalOpen,
-    currentUser,
     openModalForCreate,
-    openModalForEdit,
     closeModal,
     handleSaveUser,
-    handleDeleteUser,
+    refreshUsers: fetchUsersData,
   };
 };

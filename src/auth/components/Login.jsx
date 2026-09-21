@@ -4,8 +4,8 @@ import './Login.css';
 
 const Login = ({ onLoginSuccess }) => {
   const {
-    email,
-    setEmail,
+    usuario,
+    setUsuario,
     password,
     setPassword,
     error,
@@ -25,14 +25,16 @@ const Login = ({ onLoginSuccess }) => {
 
         <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
-            <label htmlFor="email">Correo Electrónico</label>
+            <label htmlFor="usuario">Usuario</label>
             <input
-              type="email"
-              id="email"
-              placeholder="usuario@correo.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="usuario"
+              placeholder="Ingresa tu usuario"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               disabled={loading}
+              autoComplete="username"
+              required
             />
           </div>
 
@@ -45,6 +47,8 @@ const Login = ({ onLoginSuccess }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
+              autoComplete="current-password"
+              required
             />
           </div>
 
@@ -52,10 +56,6 @@ const Login = ({ onLoginSuccess }) => {
             {loading ? 'Validando...' : 'Iniciar Sesión'}
           </button>
         </form>
-
-        <div className="login-footer">
-          <a href="#forgot">¿Olvidaste tu contraseña?</a>
-        </div>
       </div>
     </div>
   );

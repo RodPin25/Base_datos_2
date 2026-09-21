@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Login from './auth/components/Login';
 import Layout from './dashboard/components/Layout';
+import './App.css';
 
 function App() {
-  // Estado para controlar la sesión (puedes verificar si hay un token en localStorage)
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuth, setIsAuth] = useState(false);
 
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+  useEffect(() => {
+    // Si ya existe token de sesión guardado, mantener al usuario autenticado
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (token) {
+      setIsAuth(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuth(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    setIsAuth(false);
+  };
+
+  if (!isAuth) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
-    <Layout onLogout={() => setIsAuthenticated(false)} />
+    <Layout onLogout={handleLogout} />
   );
 }
 

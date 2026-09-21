@@ -1,24 +1,36 @@
-// Usamos la variable de entorno de Vite o una URL por defecto
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { apiFetch } from '../../services/api';
 
-export const loginUser = async (credentials) => {
+/**
+ * Inicia sesión enviando { Usuario, Password } según el schema LoginRequest
+ */
+export const loginUser = async ({ usuario, password }) => {
+  const data = await apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      Usuario: usuario,
+      Password: password,
+    }),
+  });
+
+  return data;
+};
+
+/**
+ * Cierra la sesión
+ */
+export const logoutUser = async () => {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Error al iniciar sesión');
-    }
-
-    return data; // Retorna el token y datos del usuario
-  } catch (error) {
-    throw error;
+    await apiFetch('/auth/logout', { method: 'POST' });
+  } finally {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
   }
+};
+
+/**
+ * Obtiene la sesión actual
+ */
+export const getSesionActual = async () => {
+  return await apiFetch('/auth/me', { method: 'GET' });
 };

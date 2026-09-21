@@ -1,39 +1,27 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { apiFetch } from '../../services/api';
 
-// Obtener todos los usuarios
-export const getUsers = async () => {
-  const response = await fetch(`${API_URL}/users`);
-  if (!response.ok) throw new Error('Error al cargar los usuarios');
-  return await response.json();
+/**
+ * Obtiene todos los empleados mediante GET a la BD
+ */
+export const getUsers = async (id = null) => {
+  const endpoint = id ? `/empleados/?id=${id}` : '/empleados/';
+  return await apiFetch(endpoint, { method: 'GET' });
 };
 
-// Crear usuario
-export const createUser = async (userData) => {
-  const response = await fetch(`${API_URL}/users`, {
+/**
+ * Crea un nuevo empleado en la BD enviando NewEmpleadoRequest
+ */
+export const createUser = async (empleadoData) => {
+  return await apiFetch('/empleados/crear/', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
+    body: JSON.stringify({
+      Nombres: empleadoData.Nombres,
+      Apellidos: empleadoData.Apellidos,
+      Correo: empleadoData.Correo || null,
+      idSede: Number(empleadoData.idSede),
+      idRol: Number(empleadoData.idRol),
+      Usuario: empleadoData.Usuario,
+      Password: empleadoData.Password,
+    }),
   });
-  if (!response.ok) throw new Error('Error al crear el usuario');
-  return await response.json();
-};
-
-// Actualizar usuario
-export const updateUser = async (id, userData) => {
-  const response = await fetch(`${API_URL}/users/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-  if (!response.ok) throw new Error('Error al actualizar el usuario');
-  return await response.json();
-};
-
-// Eliminar usuario
-export const deleteUser = async (id) => {
-  const response = await fetch(`${API_URL}/users/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) throw new Error('Error al eliminar el usuario');
-  return true;
 };

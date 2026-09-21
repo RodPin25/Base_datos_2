@@ -1,34 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Layout.css';
-
-// Importa aquí las vistas principales de tus carpetas
-// (Asumiendo que las rutas de tus carpetas principales están organizadas)
 import UserList from '../../users/components/UserList';
-// import InventarioView from '../inventario/components/InventarioView';
-// import FacturacionView from '../facturacion/components/FacturacionView';
-// import ComprasView from '../compras/components/ComprasView';
-// import DevolucionesView from '../devoluciones/components/DevolucionesView';
-// import ReportesView from '../reportes/components/ReportesView';
+import SedeList from '../../sedes/components/SedeList';
+import RolList from '../../roles/components/RolList';
+import { logoutUser } from '../../auth/services/authService';
 
 const Layout = ({ onLogout }) => {
-  // Estado para controlar qué módulo está activo ('usuarios', 'inventario', etc.)
-  const [currentModule, setCurrentModule] = useState('usuarios');
+  // Estado para controlar qué módulo está activo ('empleados', 'sedes', 'roles', etc.)
+  const [currentModule, setCurrentModule] = useState('empleados');
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('usuario');
+      if (stored) {
+        setCurrentUser(JSON.parse(stored));
+      }
+    } catch {
+      // Ignorar si no hay JSON válido
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    if (onLogout) onLogout();
+  };
 
   // Función para renderizar dinámicamente el módulo seleccionado
   const renderModule = () => {
     switch (currentModule) {
-      case 'usuarios':
+      case 'empleados':
         return <UserList />;
+      case 'sedes':
+        return <SedeList />;
+      case 'roles':
+        return <RolList />;
       case 'inventario':
-        return <div className="placeholder-module"><h2>Módulo de Inventario</h2><p>Aquí irá tu MasterTable de Inventario.</p></div>;
+        return <div className="placeholder-module"><h2>Módulo de Inventario</h2><p>Próximamente disponible.</p></div>;
       case 'compras':
-        return <div className="placeholder-module"><h2>Módulo de Compras</h2><p>Aquí irá tu MasterTable de Compras.</p></div>;
+        return <div className="placeholder-module"><h2>Módulo de Compras</h2><p>Próximamente disponible.</p></div>;
       case 'facturacion':
-        return <div className="placeholder-module"><h2>Módulo de Facturación</h2><p>Aquí irá tu MasterTable de Facturación.</p></div>;
-      case 'devoluciones':
-        return <div className="placeholder-module"><h2>Módulo de Devoluciones</h2><p>Aquí irá tu MasterTable de Devoluciones.</p></div>;
+        return <div className="placeholder-module"><h2>Módulo de Facturación</h2><p>Próximamente disponible.</p></div>;
       case 'reportes':
-        return <div className="placeholder-module"><h2>Módulo de Reportes</h2><p>Aquí irán tus gráficos y reportes de BD2.</p></div>;
+        return <div className="placeholder-module"><h2>Módulo de Reportes</h2><p>Próximamente disponible.</p></div>;
       default:
         return <UserList />;
     }
@@ -40,15 +54,27 @@ const Layout = ({ onLogout }) => {
       <aside className="sidebar">
         <div className="sidebar-brand">
           <h2>Bases de Datos 2</h2>
-          <span>Panel de Control</span>
+          <span>Proyecto Final</span>
         </div>
 
         <nav className="sidebar-nav">
           <button 
-            className={`nav-item ${currentModule === 'usuarios' ? 'active' : ''}`}
-            onClick={() => setCurrentModule('usuarios')}
+            className={`nav-item ${currentModule === 'empleados' ? 'active' : ''}`}
+            onClick={() => setCurrentModule('empleados')}
           >
-            👥 Usuarios
+            👥 Empleados
+          </button>
+          <button 
+            className={`nav-item ${currentModule === 'sedes' ? 'active' : ''}`}
+            onClick={() => setCurrentModule('sedes')}
+          >
+            🏢 Sedes
+          </button>
+          <button 
+            className={`nav-item ${currentModule === 'roles' ? 'active' : ''}`}
+            onClick={() => setCurrentModule('roles')}
+          >
+            🛡️ Roles
           </button>
           <button 
             className={`nav-item ${currentModule === 'inventario' ? 'active' : ''}`}
@@ -69,12 +95,6 @@ const Layout = ({ onLogout }) => {
             📄 Facturación
           </button>
           <button 
-            className={`nav-item ${currentModule === 'devoluciones' ? 'active' : ''}`}
-            onClick={() => setCurrentModule('devoluciones')}
-          >
-            🔄 Devoluciones
-          </button>
-          <button 
             className={`nav-item ${currentModule === 'reportes' ? 'active' : ''}`}
             onClick={() => setCurrentModule('reportes')}
           >
@@ -83,7 +103,7 @@ const Layout = ({ onLogout }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="logout-btn" onClick={onLogout}>
+          <button className="logout-btn" onClick={handleLogout}>
             🚪 Cerrar Sesión
           </button>
         </div>
@@ -98,7 +118,9 @@ const Layout = ({ onLogout }) => {
           </div>
           <div className="navbar-user">
             <span className="user-avatar">👤</span>
-            <span className="user-name">Administrador BD2</span>
+            <span className="user-name">
+              {currentUser ? `${currentUser.Usuario || 'Usuario'} (Sede #${currentUser.idSede || '1'})` : 'Sesión Activa'}
+            </span>
           </div>
         </header>
 

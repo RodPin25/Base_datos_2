@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { loginUser } from '../services/authService';
 
 export const useLogin = (onSuccess) => {
-  const [email, setEmail] = useState('');
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,7 +11,7 @@ export const useLogin = (onSuccess) => {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    if (!usuario.trim() || !password) {
       setError('Por favor, completa todos los campos.');
       return;
     }
@@ -19,11 +19,18 @@ export const useLogin = (onSuccess) => {
     setLoading(true);
 
     try {
-      const data = await loginUser({ email, password });
-      
-      // Guardar el token en localStorage (por ejemplo)
-      localStorage.setItem('token', data.token);
-      
+      const data = await loginUser({ usuario: usuario.trim(), password });
+
+      // Guardar token JWT y datos del usuario en localStorage
+      const token = data.access_token || data.token;
+      if (token) {
+        localStorage.setItem('access_token', token);
+        localStorage.setItem('token', token);
+      }
+      if (data.usuario) {
+        localStorage.setItem('usuario', JSON.stringify(data.usuario));
+      }
+
       if (onSuccess) onSuccess(data);
     } catch (err) {
       setError(err.message || 'Credenciales incorrectas');
@@ -33,8 +40,8 @@ export const useLogin = (onSuccess) => {
   };
 
   return {
-    email,
-    setEmail,
+    usuario,
+    setUsuario,
     password,
     setPassword,
     error,
