@@ -3,7 +3,7 @@ import './Layout.css';
 
 // Importa aquí las vistas principales de tus carpetas
 // (Asumiendo que las rutas de tus carpetas principales están organizadas)
-import UserList from '../usuarios/components/UserList';
+import UserList from '../../users/components/UserList';
 // import InventarioView from '../inventario/components/InventarioView';
 // import FacturacionView from '../facturacion/components/FacturacionView';
 // import ComprasView from '../compras/components/ComprasView';

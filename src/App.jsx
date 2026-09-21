@@ -1,22 +1,18 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import Login from './auth /components/Login';
+import React, { useState } from 'react';
+import Login from './auth/components/Login';
 import Layout from './dashboard/components/Layout';
-import './App.css'
 
 function App() {
-  const [isAuth, setIsAuth] = useState(false);
+  // Estado para controlar la sesión (puedes verificar si hay un token en localStorage)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  if(!isAuth){
-    return <Login onLoginSuccess ={()=> setIsAuth(true)} />
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
-
   return (
-    <Layout onLogout={() => setIsAuth(false)} />
-  )
+    <Layout onLogout={() => setIsAuthenticated(false)} />
+  );
 }
 
-export default App
+export default App;
