@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUsers } from '../hooks/useUsers';
 import UserModal from './UserModal';
+import Icon from '../../dashboard/components/Icon';
 import './UserList.css';
 
 const UserList = ({ canAdd = true }) => {
@@ -20,14 +21,16 @@ const UserList = ({ canAdd = true }) => {
     <div className="users-container">
       <div className="users-header">
         <div>
+          <p className="eyebrow">ADMINISTRACIÓN BD</p>
           <h2>Gestión de Empleados</h2>
-          <p style={{ color: '#666', fontSize: '0.9rem', margin: '4px 0 0 0' }}>
+          <p style={{ color: '#818a99', fontSize: '12.5px', margin: '7px 0 0 0' }}>
             Lista obtenida directamente desde la base de datos (SQL Server)
           </p>
         </div>
         {canAdd && (
-          <button className="btn-primary" onClick={openModalForCreate}>
-            + Nuevo Empleado
+          <button className="primary-button" onClick={openModalForCreate}>
+            <Icon name="plus" size={18} />
+            Nuevo Empleado
           </button>
         )}
       </div>
@@ -64,16 +67,39 @@ const UserList = ({ canAdd = true }) => {
                 users.map((user) => (
                   <tr key={user.id}>
                     <td>{user.id}</td>
-                    <td><strong>{user.Nombres} {user.Apellidos}</strong></td>
-                    <td><code>{user.Usuario}</code></td>
-                    <td>{user.Correo || <span style={{ color: '#999' }}>N/A</span>}</td>
                     <td>
-                      <span className="badge sede" style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 8px', borderRadius: '4px' }}>
+                      <strong>
+                        {user.Nombres} {user.Apellidos}
+                      </strong>
+                    </td>
+                    <td>
+                      <code>{user.Usuario}</code>
+                    </td>
+                    <td>{user.Correo || <span style={{ color: '#9aa2ae' }}>N/A</span>}</td>
+                    <td>
+                      <span
+                        className="badge sede"
+                        style={{
+                          background: '#e9f8fb',
+                          color: '#0891b2',
+                          padding: '4px 10px',
+                          borderRadius: '10px',
+                        }}
+                      >
                         {user.SedeNombre || `Sede #${user.idSede}`}
                       </span>
                     </td>
                     <td>
-                      <span className="badge rol" style={{ background: '#f3e8ff', color: '#6b21a8', padding: '4px 8px', borderRadius: '4px', fontWeight: '500' }}>
+                      <span
+                        className="badge rol"
+                        style={{
+                          background: '#eeefff',
+                          color: '#4f46e5',
+                          padding: '4px 10px',
+                          borderRadius: '10px',
+                          fontWeight: '650',
+                        }}
+                      >
                         {user.RolNombre || `Rol #${user.idRol}`}
                       </span>
                     </td>
@@ -81,7 +107,9 @@ const UserList = ({ canAdd = true }) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="no-data">No se encontraron empleados registrados.</td>
+                  <td colSpan="6" className="no-data">
+                    No se encontraron empleados registrados.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -90,11 +118,7 @@ const UserList = ({ canAdd = true }) => {
       )}
 
       {canAdd && (
-        <UserModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onSave={handleSaveUser}
-        />
+        <UserModal isOpen={isModalOpen} onClose={closeModal} onSave={handleSaveUser} />
       )}
     </div>
   );

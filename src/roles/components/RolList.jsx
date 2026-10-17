@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getRoles, createRol } from '../services/rolService';
+import Icon from '../../dashboard/components/Icon';
 
 const RolList = ({ canAdd = true }) => {
   const [roles, setRoles] = useState([]);
@@ -61,14 +62,16 @@ const RolList = ({ canAdd = true }) => {
     <div className="users-container">
       <div className="users-header">
         <div>
+          <p className="eyebrow">ADMINISTRACIÓN BD</p>
           <h2>Catálogo de Roles</h2>
-          <p style={{ color: '#666', fontSize: '0.9rem', margin: '4px 0 0 0' }}>
+          <p style={{ color: '#818a99', fontSize: '12.5px', margin: '7px 0 0 0' }}>
             Listado y consulta de roles del sistema en SQL Server
           </p>
         </div>
         {canAdd && (
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-            + Nuevo Rol
+          <button className="primary-button" onClick={() => setIsModalOpen(true)}>
+            <Icon name="plus" size={18} />
+            Nuevo Rol
           </button>
         )}
       </div>
@@ -102,7 +105,16 @@ const RolList = ({ canAdd = true }) => {
                   <tr key={rol.id}>
                     <td>{rol.id}</td>
                     <td>
-                      <span className="badge rol" style={{ background: '#f3e8ff', color: '#6b21a8', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                      <span
+                        className="badge rol"
+                        style={{
+                          background: '#eeefff',
+                          color: '#4f46e5',
+                          padding: '4px 10px',
+                          borderRadius: '10px',
+                          fontWeight: '650',
+                        }}
+                      >
                         {rol.Nombre}
                       </span>
                     </td>
@@ -110,7 +122,9 @@ const RolList = ({ canAdd = true }) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="2" className="no-data">No se encontraron roles registrados.</td>
+                  <td colSpan="2" className="no-data">
+                    No se encontraron roles registrados.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -144,11 +158,7 @@ const RolList = ({ canAdd = true }) => {
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={submitting}
-                >
+                <button type="submit" className="btn-primary" disabled={submitting}>
                   {submitting ? 'Guardando...' : 'Crear Rol'}
                 </button>
               </div>
@@ -161,4 +171,3 @@ const RolList = ({ canAdd = true }) => {
 };
 
 export default RolList;
-

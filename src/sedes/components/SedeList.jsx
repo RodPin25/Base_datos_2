@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSedes, createSede } from '../services/sedeService';
+import Icon from '../../dashboard/components/Icon';
 
 const SedeList = ({ canAdd = true }) => {
   const [sedes, setSedes] = useState([]);
@@ -71,14 +72,16 @@ const SedeList = ({ canAdd = true }) => {
     <div className="users-container">
       <div className="users-header">
         <div>
+          <p className="eyebrow">ADMINISTRACIÓN BD</p>
           <h2>Catálogo de Sedes</h2>
-          <p style={{ color: '#666', fontSize: '0.9rem', margin: '4px 0 0 0' }}>
+          <p style={{ color: '#818a99', fontSize: '12.5px', margin: '7px 0 0 0' }}>
             Listado y consulta de sedes registradas en SQL Server
           </p>
         </div>
         {canAdd && (
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-            + Nueva Sede
+          <button className="primary-button" onClick={() => setIsModalOpen(true)}>
+            <Icon name="plus" size={18} />
+            Nueva Sede
           </button>
         )}
       </div>
@@ -113,14 +116,18 @@ const SedeList = ({ canAdd = true }) => {
                 filteredSedes.map((sede) => (
                   <tr key={sede.id}>
                     <td>{sede.id}</td>
-                    <td><strong>{sede.Nombre}</strong></td>
+                    <td>
+                      <strong>{sede.Nombre}</strong>
+                    </td>
                     <td>{sede.Direccion}</td>
                     <td>{sede.Contacto}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="no-data">No se encontraron sedes registradas.</td>
+                  <td colSpan="4" className="no-data">
+                    No se encontraron sedes registradas.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -178,11 +185,7 @@ const SedeList = ({ canAdd = true }) => {
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={submitting}
-                >
+                <button type="submit" className="btn-primary" disabled={submitting}>
                   {submitting ? 'Guardando...' : 'Crear Sede'}
                 </button>
               </div>
@@ -195,4 +198,3 @@ const SedeList = ({ canAdd = true }) => {
 };
 
 export default SedeList;
-
