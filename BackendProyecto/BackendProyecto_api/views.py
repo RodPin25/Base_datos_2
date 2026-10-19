@@ -26,6 +26,15 @@ from .schemas import (
     NewEmpleadoResponse,
     EmpleadoRequest,
     EmpleadoResponse,
+    GenerarFacturaRequest,
+    GenerarFacturaResponse,
+    RegistrarPagoRequest,
+    RegistrarPagoResponse,
+    MedioPagoResponse,
+    RealizarOrdenCompraRequest,
+    RealizarOrdenCompraResponse,
+    IngresoBodegaRequest,
+    IngresoBodegaResponse,
 )
 
 
@@ -364,3 +373,220 @@ def obtener_empleados(request):
             {'Exito': False, 'Mensaje': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# =============================================================================
+# FACTURACIÓN
+# =============================================================================
+
+@extend_schema(
+    request=GenerarFacturaRequest,
+    responses={201: GenerarFacturaResponse, 400: GenerarFacturaResponse},
+    tags=['Facturación'],
+    description='Genera una factura (directa con UDT dbo.DetalleTransaccionUDT o desde una cotización) ejecutando dbo.sp_GenerarFactura.'
+)
+@api_view(['POST'])
+def generar_factura(request):
+    """POST /api/facturas/generar/"""
+    serializer = GenerarFacturaRequest(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {'Exito': False, 'Mensaje': 'Datos inválidos', 'errors': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = serializer.validated_data
+    try:
+        detalles = data.get('Detalles') or []
+        result = execute_sp(
+            'dbo.sp_GenerarFactura',
+            params={
+                '@IdCliente': data['IdCliente'],
+                '@IdMedioPago': data['IdMedioPago'],
+                '@IdCotizacion': data.get('IdCotizacion'),
+            },
+            udt_params={
+                '@Detalles': {
+                    'type_name': 'dbo.DetalleTransaccionUDT',
+                    'columns': ['IdProducto', 'Cantidad', 'PrecioUnitario'],
+                    'rows': detalles,
+                }
+            },
+        )
+        row = result[0] if result else {}
+        return Response(
+            {
+                'Exito': True,
+                'Mensaje': 'Factura generada exitosamente.',
+                'IdFacturaGenerada': row.get('IdFacturaGenerada'),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+    except Exception as e:
+        return Response(
+            {'Exito': False, 'Mensaje': str(e), 'IdFacturaGenerada': None},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+# =============================================================================
+# PAGOS Y MEDIOS DE PAGO
+# =============================================================================
+
+@extend_schema(
+    request=RegistrarPagoRequest,
+    responses={201: RegistrarPagoResponse, 400: RegistrarPagoResponse},
+    tags=['Pagos'],
+    description='Registra un pago asociado a una factura y actualiza su estado si cubre el total mediante dbo.sp_RegistrarPago.'
+)
+@api_view(['POST'])
+def registrar_pago(request):
+    """POST /api/pagos/registrar/"""
+    serializer = RegistrarPagoRequest(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {'Exito': False, 'Mensaje': 'Datos inválidos', 'errors': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = serializer.validated_data
+    try:
+        result = execute_sp('dbo.sp_RegistrarPago', {
+            '@IdFactura': data['IdFactura'],
+            '@IdMedioPago': data['IdMedioPago'],
+            '@MontoPagado': data['MontoPagado'],
+            '@Referencia': data.get('Referencia'),
+        })
+        row = result[0] if result else {}
+        exito = bool(row.get('Exito', True))
+        http_status = status.HTTP_201_CREATED if exito else status.HTTP_400_BAD_REQUEST
+        return Response(
+            {
+                'Exito': exito,
+                'Mensaje': row.get('Mensaje', 'Pago registrado correctamente.'),
+            },
+            status=http_status,
+        )
+    except Exception as e:
+        return Response(
+            {'Exito': False, 'Mensaje': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    request=None,
+    responses={200: MedioPagoResponse(many=True)},
+    tags=['Pagos'],
+    description='Obtiene los medios de pago activos en el sistema mediante dbo.sp_ObtenerMediosPago.'
+)
+@api_view(['GET', 'POST'])
+def obtener_medios_pago(request):
+    """GET o POST /api/medios-pago/"""
+    try:
+        result = execute_sp('dbo.sp_ObtenerMediosPago')
+        return Response(result, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'Exito': False, 'Mensaje': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+# =============================================================================
+# ÓRDENES DE COMPRA Y BODEGA
+# =============================================================================
+
+@extend_schema(
+    request=RealizarOrdenCompraRequest,
+    responses={201: RealizarOrdenCompraResponse, 400: RealizarOrdenCompraResponse},
+    tags=['Compras y Bodega'],
+    description='Crea una orden de compra a proveedor enviando el detalle con dbo.DetalleCompraUDT a dbo.sp_RealizarOrdenCompra.'
+)
+@api_view(['POST'])
+def realizar_orden_compra(request):
+    """POST /api/ordenes-compra/crear/"""
+    serializer = RealizarOrdenCompraRequest(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {'Exito': False, 'Mensaje': 'Datos inválidos', 'errors': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = serializer.validated_data
+    try:
+        result = execute_sp(
+            'dbo.sp_RealizarOrdenCompra',
+            params={
+                '@IdProveedor': data['IdProveedor'],
+            },
+            udt_params={
+                '@Detalles': {
+                    'type_name': 'dbo.DetalleCompraUDT',
+                    'columns': ['IdProducto', 'Cantidad', 'PrecioCosto'],
+                    'rows': data['Detalles'],
+                }
+            },
+        )
+        row = result[0] if result else {}
+        return Response(
+            {
+                'Exito': True,
+                'IdOrdenCompraGenerada': row.get('IdOrdenCompraGenerada'),
+                'Mensaje': row.get('Mensaje', 'Orden de compra creada exitosamente.'),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+    except Exception as e:
+        return Response(
+            {'Exito': False, 'IdOrdenCompraGenerada': None, 'Mensaje': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@extend_schema(
+    request=IngresoBodegaRequest,
+    responses={201: IngresoBodegaResponse, 400: IngresoBodegaResponse},
+    tags=['Compras y Bodega'],
+    description='Registra el ingreso de mercadería a bodega enviando dbo.DetalleIngresoUDT a dbo.sp_IngresoBodega y actualiza existencias y estado de la orden.'
+)
+@api_view(['POST'])
+def registrar_ingreso_bodega(request):
+    """POST /api/bodega/ingreso/"""
+    serializer = IngresoBodegaRequest(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {'Exito': False, 'Mensaje': 'Datos inválidos', 'errors': serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = serializer.validated_data
+    try:
+        result = execute_sp(
+            'dbo.sp_IngresoBodega',
+            params={
+                '@IdOrdenCompra': data['IdOrdenCompra'],
+            },
+            udt_params={
+                '@DetallesIngreso': {
+                    'type_name': 'dbo.DetalleIngresoUDT',
+                    'columns': ['IdProducto', 'CantidadIngresada'],
+                    'rows': data['DetallesIngreso'],
+                }
+            },
+        )
+        row = result[0] if result else {}
+        return Response(
+            {
+                'Exito': True,
+                'IdIngresoGenerado': row.get('IdIngresoGenerado'),
+                'Mensaje': row.get('Mensaje', 'Ingreso a bodega procesado correctamente.'),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+    except Exception as e:
+        return Response(
+            {'Exito': False, 'IdIngresoGenerado': None, 'Mensaje': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+

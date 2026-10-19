@@ -21,4 +21,16 @@ urlpatterns = [
     # Empleados
     path('empleados/crear/', views.crear_empleado, name='crear_empleado'),
     path('empleados/', views.obtener_empleados, name='obtener_empleados'),
+
+    # Facturación
+    path('facturas/generar/', views.generar_factura, name='generar_factura'),
+
+    # Pagos y Medios de Pago
+    path('pagos/registrar/', views.registrar_pago, name='registrar_pago'),
+    path('medios-pago/', views.obtener_medios_pago, name='obtener_medios_pago'),
+
+    # Órdenes de Compra y Bodega
+    path('ordenes-compra/crear/', views.realizar_orden_compra, name='realizar_orden_compra'),
+    path('bodega/ingreso/', views.registrar_ingreso_bodega, name='registrar_ingreso_bodega'),
 ]
+

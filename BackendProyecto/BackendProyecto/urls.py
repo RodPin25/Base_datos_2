@@ -2,6 +2,7 @@
 URL configuration for BackendProyecto project.
 """
 from django.urls import path, include
+from django.views.generic import RedirectView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -9,6 +10,10 @@ from drf_spectacular.views import (
 )
 
 urlpatterns = [
+    path('', RedirectView.as_view(pattern_name='swagger-ui', permanent=False)),
+    path('docs/', RedirectView.as_view(pattern_name='swagger-ui', permanent=False)),
+    path('swagger/', RedirectView.as_view(pattern_name='swagger-ui', permanent=False)),
+
     path('api/', include('BackendProyecto_api.urls')),
 
     # OpenAPI 3 Schema & Swagger UI
@@ -16,3 +21,4 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
+

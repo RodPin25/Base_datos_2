@@ -150,3 +150,122 @@ class EmpleadoResponse(serializers.Serializer):
 # Aliases
 EmpleadoCreateRequest = NewEmpleadoRequest
 EmpleadoGetRequest = EmpleadoRequest
+
+
+# =============================================================================
+# FACTURACIÓN (dbo.sp_GenerarFactura & dbo.DetalleTransaccionUDT)
+# =============================================================================
+
+class DetalleTransaccionItemSerializer(serializers.Serializer):
+    IdProducto = serializers.IntegerField(help_text="ID del producto")
+    Cantidad = serializers.IntegerField(min_value=1, help_text="Cantidad a facturar")
+    PrecioUnitario = serializers.DecimalField(max_digits=18, decimal_places=2, help_text="Precio unitario del producto")
+
+
+class GenerarFacturaRequest(serializers.Serializer):
+    IdCliente = serializers.IntegerField(help_text="ID del cliente")
+    IdMedioPago = serializers.IntegerField(help_text="ID del medio de pago")
+    IdCotizacion = serializers.IntegerField(
+        required=False,
+        default=None,
+        allow_null=True,
+        help_text="ID de la cotización confirmada (opcional; si es nulo asume facturación directa)",
+    )
+    Detalles = DetalleTransaccionItemSerializer(
+        many=True,
+        required=False,
+        default=list,
+        help_text="Detalle de productos (dbo.DetalleTransaccionUDT). Requerido cuando IdCotizacion es nulo.",
+    )
+
+    def validate(self, attrs):
+        if attrs.get('IdCotizacion') is None and not attrs.get('Detalles'):
+            raise serializers.ValidationError(
+                "Debe enviar 'Detalles' con al menos un producto para facturación directa, o especificar 'IdCotizacion'."
+            )
+        return attrs
+
+
+class GenerarFacturaResponse(serializers.Serializer):
+    Exito = serializers.BooleanField()
+    Mensaje = serializers.CharField()
+    IdFacturaGenerada = serializers.IntegerField(allow_null=True)
+
+
+# =============================================================================
+# PAGOS Y MEDIOS DE PAGO (dbo.sp_RegistrarPago & dbo.sp_ObtenerMediosPago)
+# =============================================================================
+
+class RegistrarPagoRequest(serializers.Serializer):
+    IdFactura = serializers.IntegerField(help_text="ID de la factura")
+    IdMedioPago = serializers.IntegerField(help_text="ID del medio de pago")
+    MontoPagado = serializers.DecimalField(max_digits=18, decimal_places=2, help_text="Monto pagado")
+    Referencia = serializers.CharField(
+        max_length=100,
+        required=False,
+        default=None,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Número de autorización de tarjeta o referencia de transferencia (opcional)",
+    )
+
+
+class RegistrarPagoResponse(serializers.Serializer):
+    Exito = serializers.BooleanField()
+    Mensaje = serializers.CharField()
+
+
+class MedioPagoResponse(serializers.Serializer):
+    IdMedioPago = serializers.IntegerField()
+    Nombre = serializers.CharField()
+    Descripcion = serializers.CharField(allow_null=True, required=False)
+
+
+# =============================================================================
+# ÓRDENES DE COMPRA (dbo.sp_RealizarOrdenCompra & dbo.DetalleCompraUDT)
+# =============================================================================
+
+class DetalleCompraItemSerializer(serializers.Serializer):
+    IdProducto = serializers.IntegerField(help_text="ID del producto")
+    Cantidad = serializers.IntegerField(min_value=1, help_text="Cantidad solicitada")
+    PrecioCosto = serializers.DecimalField(max_digits=18, decimal_places=2, help_text="Precio de costo unitario")
+
+
+class RealizarOrdenCompraRequest(serializers.Serializer):
+    IdProveedor = serializers.IntegerField(help_text="ID del proveedor")
+    Detalles = DetalleCompraItemSerializer(
+        many=True,
+        allow_empty=False,
+        help_text="Lista de productos solicitados en la orden de compra (dbo.DetalleCompraUDT)",
+    )
+
+
+class RealizarOrdenCompraResponse(serializers.Serializer):
+    Exito = serializers.BooleanField()
+    IdOrdenCompraGenerada = serializers.IntegerField(allow_null=True)
+    Mensaje = serializers.CharField()
+
+
+# =============================================================================
+# INGRESOS A BODEGA (dbo.sp_IngresoBodega & dbo.DetalleIngresoUDT)
+# =============================================================================
+
+class DetalleIngresoItemSerializer(serializers.Serializer):
+    IdProducto = serializers.IntegerField(help_text="ID del producto")
+    CantidadIngresada = serializers.IntegerField(min_value=1, help_text="Cantidad ingresada a bodega")
+
+
+class IngresoBodegaRequest(serializers.Serializer):
+    IdOrdenCompra = serializers.IntegerField(help_text="ID de la orden de compra")
+    DetallesIngreso = DetalleIngresoItemSerializer(
+        many=True,
+        allow_empty=False,
+        help_text="Detalle de productos ingresados a bodega (dbo.DetalleIngresoUDT)",
+    )
+
+
+class IngresoBodegaResponse(serializers.Serializer):
+    Exito = serializers.BooleanField()
+    IdIngresoGenerado = serializers.IntegerField(allow_null=True)
+    Mensaje = serializers.CharField()
+
