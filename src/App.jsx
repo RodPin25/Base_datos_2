@@ -1,18 +1,13 @@
-import { useState, useEffect } from 'react';
-import Login from './auth/components/Login';
-import Layout from './dashboard/components/Layout';
+import { useState } from 'react';
+import AppRouter from './routes/AppRouter';
 import './App.css';
 
-function App() {
-  const [isAuth, setIsAuth] = useState(false);
+function hasStoredToken() {
+  return Boolean(localStorage.getItem('access_token') || localStorage.getItem('token'));
+}
 
-  useEffect(() => {
-    // Si ya existe token de sesión guardado, mantener al usuario autenticado
-    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-    if (token) {
-      setIsAuth(true);
-    }
-  }, []);
+function App() {
+  const [isAuth, setIsAuth] = useState(hasStoredToken);
 
   const handleLoginSuccess = () => {
     setIsAuth(true);
@@ -25,12 +20,12 @@ function App() {
     setIsAuth(false);
   };
 
-  if (!isAuth) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
-    <Layout onLogout={handleLogout} />
+    <AppRouter
+      isAuth={isAuth}
+      onLoginSuccess={handleLoginSuccess}
+      onLogout={handleLogout}
+    />
   );
 }
 
