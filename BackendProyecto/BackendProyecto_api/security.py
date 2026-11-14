@@ -4,11 +4,14 @@ Adaptado del archivo securuty.py para Django REST Framework
 """
 import os
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 from typing import Optional
 import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, VerifyMismatchError
 from django.conf import settings
+from rest_framework import status
+from rest_framework.response import Response
 
 ph = PasswordHasher()
 
@@ -77,4 +80,20 @@ def obtener_payload_desde_request(request) -> Optional[dict]:
         return decodificar_token(token)
     except (jwt.ExpiredSignatureError, jwt.PyJWTError):
         return None
+
+
+def requiere_autenticacion(view_func):
+    """Decorador para exigir un JWT válido (cookie 'access_token' o header 'Authorization: Bearer')."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        payload = obtener_payload_desde_request(request)
+        if not payload:
+            return Response(
+                {'Exito': False, 'Mensaje': 'No autorizado. Token JWT faltante, inválido o expirado.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        request.jwt_payload = payload
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
 

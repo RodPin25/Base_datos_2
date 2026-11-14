@@ -11,14 +11,23 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = 'django-insecure-p7(&y659^ym2$4*2p79tn0ew82_uq(d@a5*=e!d+)p1dxqcq86'
+# Quick-start development settings - configured via .env for local execution
+SECRET_KEY = os.getenv(
+    'SECRET_KEY',
+    'django-insecure-p7(&y659^ym2$4*2p79tn0ew82_uq(d@a5*=e!d+)p1dxqcq86',
+).strip('"\'')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').strip('"\'').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = ['*']
+JWT_ALGORITHM = os.getenv('JWT_ALGORITHM', 'HS256').strip('"\'')
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', str(60 * 24)).strip('"\'')
+)
+
+_allowed_hosts_env = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*').strip('"\'')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()] or ['*']
 
 
 # Application definition
@@ -38,17 +47,16 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
-# Configuración CORS para permitir peticiones desde el frontend (Vite: localhost:5173)
+# Configuración CORS para permitir peticiones desde el frontend local (Vite: localhost:5173)
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
+
+_cors_origins_env = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000',
+).strip('"\'')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_env.split(',') if o.strip()]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 ROOT_URLCONF = 'BackendProyecto.urls'
 
@@ -73,7 +81,7 @@ DATABASES = {}
 
 
 # Configuración de conexión ODBC desde .env
-DATABASE_URL = os.getenv('DATABASE_URL', '')
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip('"\'')
 
 
 # Internationalization
