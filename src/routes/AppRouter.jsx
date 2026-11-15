@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from '../layouts/AppLayout';
-import { getRoleBadge } from '../shared/utils/formatters';
 import { getSessionUser } from '../services/authService';
-import { ROUTES } from './navigation';
+import { getRoleBadge } from '../shared/utils/formatters';
+import { ROUTES, canAccessRoute, getDefaultRouteForRole } from './navigation';
 
 import LoginPage from '../pages/login/LoginPage';
 import InicioPage from '../pages/inicio/InicioPage';
@@ -19,17 +19,16 @@ import SedesPage from '../pages/sedes/SedesPage';
 import RolesPage from '../pages/roles/RolesPage';
 import AccesoDenegadoPage from '../pages/acceso-denegado/AccesoDenegadoPage';
 
-function AdminRoute({ children }) {
+function RoleRoute({ allowedRoles, children }) {
   const currentUser = getSessionUser();
   const idRol = currentUser?.idRol ? Number(currentUser.idRol) : null;
-  const canViewAdminCatalogs = idRol !== 3;
-  const canAddAdminCatalogs = idRol === 1;
+  const defaultRoute = getDefaultRouteForRole(idRol);
 
-  if (!canViewAdminCatalogs) {
-    return <AccesoDenegadoPage roleBadge={getRoleBadge(idRol)} />;
+  if (!canAccessRoute(idRol, allowedRoles)) {
+    return <AccesoDenegadoPage roleBadge={getRoleBadge(idRol)} defaultRoute={defaultRoute} />;
   }
 
-  return React.cloneElement(children, { canAdd: canAddAdminCatalogs });
+  return children;
 }
 
 export default function AppRouter({ isAuth, onLoginSuccess, onLogout }) {
@@ -42,47 +41,108 @@ export default function AppRouter({ isAuth, onLoginSuccess, onLogout }) {
     );
   }
 
+  const currentUser = getSessionUser();
+  const idRol = currentUser?.idRol ? Number(currentUser.idRol) : null;
+  const defaultRoute = getDefaultRouteForRole(idRol);
+  const canAddAdminCatalogs = idRol === 1;
+
   return (
     <Routes>
-      <Route path={ROUTES.LOGIN} element={<Navigate to={ROUTES.INICIO} replace />} />
+      <Route path={ROUTES.LOGIN} element={<Navigate to={defaultRoute} replace />} />
 
       <Route element={<AppLayout onLogout={onLogout} />}>
-        <Route index element={<Navigate to={ROUTES.INICIO} replace />} />
-        <Route path={ROUTES.INICIO} element={<InicioPage />} />
-        <Route path={ROUTES.VENTAS} element={<VentasPage />} />
-        <Route path={ROUTES.COTIZACIONES} element={<CotizacionesPage />} />
-        <Route path={ROUTES.FACTURACION} element={<FacturacionPage />} />
-        <Route path={ROUTES.INVENTARIO} element={<InventarioPage />} />
-        <Route path={ROUTES.COMPRAS} element={<ComprasPage />} />
-        <Route path={ROUTES.CLIENTES} element={<ClientesPage />} />
-        <Route path={ROUTES.REPORTES} element={<ReportesPage />} />
+        <Route index element={<Navigate to={defaultRoute} replace />} />
 
+        <Route
+          path={ROUTES.INICIO}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <InicioPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.VENTAS}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <VentasPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.COTIZACIONES}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <CotizacionesPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.FACTURACION}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <FacturacionPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.INVENTARIO}
+          element={
+            <RoleRoute allowedRoles={[1, 2, 3]}>
+              <InventarioPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.COMPRAS}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <ComprasPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.CLIENTES}
+          element={
+            <RoleRoute allowedRoles={[1, 3]}>
+              <ClientesPage />
+            </RoleRoute>
+          }
+        />
+        <Route
+          path={ROUTES.REPORTES}
+          element={
+            <RoleRoute allowedRoles={[1]}>
+              <ReportesPage />
+            </RoleRoute>
+          }
+        />
         <Route
           path={ROUTES.EMPLEADOS}
           element={
-            <AdminRoute>
-              <EmpleadosPage />
-            </AdminRoute>
+            <RoleRoute allowedRoles={[1]}>
+              <EmpleadosPage canAdd={canAddAdminCatalogs} />
+            </RoleRoute>
           }
         />
         <Route
           path={ROUTES.SEDES}
           element={
-            <AdminRoute>
-              <SedesPage />
-            </AdminRoute>
+            <RoleRoute allowedRoles={[1]}>
+              <SedesPage canAdd={canAddAdminCatalogs} />
+            </RoleRoute>
           }
         />
         <Route
           path={ROUTES.ROLES}
           element={
-            <AdminRoute>
-              <RolesPage />
-            </AdminRoute>
+            <RoleRoute allowedRoles={[1]}>
+              <RolesPage canAdd={canAddAdminCatalogs} />
+            </RoleRoute>
           }
         />
 
-        <Route path="*" element={<Navigate to={ROUTES.INICIO} replace />} />
+        <Route path="*" element={<Navigate to={defaultRoute} replace />} />
       </Route>
     </Routes>
   );

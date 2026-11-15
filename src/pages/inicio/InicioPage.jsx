@@ -94,6 +94,7 @@ export default function InicioPage() {
   const navigate = useNavigate();
   const currentUser = getSessionUser();
   const userName = currentUser?.Usuario || 'Usuario';
+  const isAdmin = Number(currentUser?.idRol) === 1;
 
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -210,8 +211,8 @@ export default function InicioPage() {
       <section className="welcome-row">
         <div>
           <p className="eyebrow">PANEL PRINCIPAL · COLORA</p>
-          <h1>Buenos días, {userName.split(' ')[0]}</h1>
-          <p>Resumen en tiempo real conectado a los reportes de SQL Server.</p>
+          <h1>Bienvenido, {userName.split(' ')[0]}</h1>
+          <p>Resumen conectado a los reportes de SQL Server.</p>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button className="outline-button" type="button" onClick={loadReportData} disabled={loading}>
@@ -252,9 +253,11 @@ export default function InicioPage() {
               <h2>Productos más vendidos</h2>
               <p>Ranking de reportería (excluye facturas anuladas)</p>
             </div>
-            <button className="text-button" type="button" onClick={() => navigate(ROUTES.REPORTES)}>
-              Ver reportes <Icon name="arrow" size={15} />
-            </button>
+            {isAdmin && (
+              <button className="text-button" type="button" onClick={() => navigate(ROUTES.REPORTES)}>
+                Ver reportes <Icon name="arrow" size={15} />
+              </button>
+            )}
           </div>
 
           <div className="chart-summary">

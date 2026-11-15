@@ -3,7 +3,13 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import Icon from '../shared/components/Icon';
 import { logoutUser, getSessionUser } from '../services/authService';
 import { getRoleBadge } from '../shared/utils/formatters';
-import { ROUTES, mainNavItems, adminNavItems } from '../routes/navigation';
+import {
+  ROUTES,
+  mainNavItems,
+  adminNavItems,
+  canAccessRoute,
+  getDefaultRouteForRole,
+} from '../routes/navigation';
 import './AppLayout.css';
 
 export default function AppLayout({ onLogout }) {
@@ -14,7 +20,9 @@ export default function AppLayout({ onLogout }) {
   const [noticeOpen, setNoticeOpen] = useState(false);
 
   const idRol = currentUser?.idRol ? Number(currentUser.idRol) : null;
-  const canViewAdminCatalogs = idRol !== 3;
+  const visibleMainItems = mainNavItems.filter((item) => canAccessRoute(idRol, item.roles));
+  const visibleAdminItems = adminNavItems.filter((item) => canAccessRoute(idRol, item.roles));
+  const defaultRoute = getDefaultRouteForRole(idRol);
   const roleBadge = getRoleBadge(idRol);
 
   useEffect(() => {
@@ -75,7 +83,7 @@ export default function AppLayout({ onLogout }) {
 
         <p className="nav-caption">MENÚ PRINCIPAL</p>
         <nav aria-label="Navegación principal">
-          {mainNavItems.map((item) => (
+          {visibleMainItems.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
@@ -89,13 +97,13 @@ export default function AppLayout({ onLogout }) {
           ))}
         </nav>
 
-        {canViewAdminCatalogs && (
+        {visibleAdminItems.length > 0 && (
           <>
             <p className="nav-caption" style={{ marginTop: 18 }}>
               ADMINISTRACIÓN BD
             </p>
             <nav aria-label="Catálogos de administración">
-              {adminNavItems.map((item) => (
+              {visibleAdminItems.map((item) => (
                 <NavLink
                   key={item.id}
                   to={item.path}
@@ -116,7 +124,7 @@ export default function AppLayout({ onLogout }) {
           </div>
           <strong>¿Necesitas ayuda?</strong>
           <p>Consulta la guía rápida para aprender a usar el sistema.</p>
-          <button type="button" onClick={() => navigate(ROUTES.INICIO)}>
+          <button type="button" onClick={() => navigate(defaultRoute)}>
             Ver resumen
           </button>
         </div>
@@ -187,15 +195,17 @@ export default function AppLayout({ onLogout }) {
             <div className="notification-popover">
               <strong>Notificaciones</strong>
               <p>Tienes 4 órdenes pendientes de recibir hoy.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  navigate(ROUTES.COMPRAS);
-                  setNoticeOpen(false);
-                }}
-              >
-                Revisar órdenes
-              </button>
+              {canAccessRoute(idRol, [1, 3]) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate(ROUTES.COMPRAS);
+                    setNoticeOpen(false);
+                  }}
+                >
+                  Revisar órdenes
+                </button>
+              )}
             </div>
           )}
         </header>

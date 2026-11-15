@@ -195,7 +195,7 @@ button {
 .lower-grid { grid-template-columns: minmax(0, 1.6fr) minmax(280px, .8fr); }
 .text-button { display: flex; align-items: center; gap: 3px; border: 0; background: none; color: #4f46e5; font-size: 9.5px; font-weight: 650; padding: 3px 0; }
 .recent-sales { overflow: hidden; }
-.table-wrap { overflow-x: auto; margin: 12px -21px -20px; }
+.table-wrap { overflow-x: auto; margin: 12px -21px 0; padding-bottom: 8px; }
 table { width: 100%; border-collapse: collapse; min-width: 590px; }
 th { color: #a3aab5; font-size: 7.5px; letter-spacing: .55px; font-weight: 650; background: #fafbfc; padding: 9px 12px; text-align: left; border-top: 1px solid #eef0f3; border-bottom: 1px solid #eef0f3; text-transform: uppercase; }
 th:first-child, td:first-child { padding-left: 21px; }
@@ -528,8 +528,8 @@ td button { border: 0; background: none; color: #969eaa; padding: 0; }
 .document-stat p { color: #8a93a2; font-size: 10px; margin: 0 0 5px; }
 .document-stat strong { display: block; color: #273142; font-size: 18px; letter-spacing: -.3px; }
 .document-stat small { display: block; color: #9aa2ae; font-size: 9px; margin-top: 5px; }
-.documents-panel { padding-bottom: 0; overflow: visible; }
-.documents-table { margin-top: 17px; overflow: visible; }
+.documents-panel { padding-bottom: 16px; overflow: visible; }
+.documents-table { margin-top: 17px; overflow-x: auto; padding-bottom: 8px; }
 .documents-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .documents-toolbar h2 { margin: 0; font-size: 14px; color: #18212f; font-weight: 650; }
 .documents-toolbar p { color: #969eaa; font-size: 9.5px; margin: 5px 0 0; }
