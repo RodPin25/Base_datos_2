@@ -99,6 +99,44 @@ export const generarFactura = async ({
     }),
   });
 };
+/**
+ * Obtiene todas las facturas anuladas
+ */
+export const getAnulaciones = async () =>{
+  return await apiFetch('/facturas/anulaciones/',{ method: 'GET' });
+}
+
+/**
+ * Obtiene la factura anulada por medio del Id de la anulacion, no ID de factura.
+ */
+export const getAnulacionesId = async ({ id }) =>{
+  return await apiFetch('/facturas/anulaciones/',{ 
+    method: 'POST',
+    body: JSON.stringify({
+      id:Number(id),
+    }) 
+  });
+}
+
+/**
+ * Anula una factura por medio del sp de anulacion de facturas
+ */
+export const anularFactura = async ({
+  IdFactura,
+  Motivo = null,
+  IdEmpleado,
+  IdSede
+}) => {
+  return await apiFetch('/facturas/anular/',{
+    method:'POST',
+    body: JSON.stringify({
+      IdFactura: Number(IdFactura),
+      ...(Motivo ? { Motivo: Motivo } : {}), 
+      IdEmpleado:Number(IdEmpleado),
+      IdSede: Number(IdSede)
+    })
+  })
+}
 
 /**
  * Registra el pago de una factura (dbo.sp_RegistrarPago)
