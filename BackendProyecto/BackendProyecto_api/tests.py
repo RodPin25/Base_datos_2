@@ -231,3 +231,22 @@ class BackendProyectoApiTests(SimpleTestCase):
         # Los VALUES del INSERT van antes que el EXEC, así que sus valores deben ir primero
         self.assertEqual(executed_params, [7, 10, 450.0, 8, 5, 120.5, 1, 2])
         self.assertLess(executed_sql.index('INSERT INTO'), executed_sql.index('EXEC'))
+
+    @patch('BackendProyecto_api.views.execute_sp')
+    def test_obtener_categorias_presentaciones_y_marcas(self, mock_sp):
+        mock_sp.return_value = [{
+            'id': 1,
+            'idCategoria': 1,
+            'CategoriaNombre': 'Vinílica',
+            'idPresentacion': 1,
+            'PresentacionNombre': 'Galón',
+            'NombreCompleto': 'Vinílica - Galón',
+        }]
+        res_cp = self.client.get('/api/categorias-presentaciones/')
+        self.assertEqual(res_cp.status_code, 200)
+        mock_sp.assert_called_with('dbo.sp_ObtenerCategoriasPresentaciones', None)
+
+        mock_sp.return_value = [{'id': 1, 'Nombre': 'Sherwin Williams'}]
+        res_marcas = self.client.get('/api/marcas/?id=1')
+        self.assertEqual(res_marcas.status_code, 200)
+        mock_sp.assert_called_with('dbo.sp_ObtenerMarcas', {'@id': 1})

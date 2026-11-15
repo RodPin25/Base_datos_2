@@ -50,6 +50,10 @@ from .schemas import (
     NewProductoRequest,
     UpdateProductoRequest,
     ProductoResponse,
+    CategoriaPresentacionRequest,
+    CategoriaPresentacionResponse,
+    MarcaRequest,
+    MarcaResponse,
     GenerarFacturaRequest,
     GenerarFacturaResponse,
     FacturaRequest,
@@ -907,6 +911,42 @@ def eliminar_producto(request):
         row = result[0] if result else {}
         http_status = status.HTTP_200_OK if row.get('Exito') else status.HTTP_400_BAD_REQUEST
         return Response(row, status=http_status)
+    except Exception as e:
+        return Response({'Exito': False, 'Mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    request=CategoriaPresentacionRequest,
+    responses={200: CategoriaPresentacionResponse(many=True)},
+    tags=['Productos'],
+    description='Obtiene todas las combinaciones de Categoría y Presentación (JOIN dbo.CategoriaPresentacion, dbo.Categoria y dbo.Presentacion) mediante dbo.sp_ObtenerCategoriasPresentaciones.'
+)
+@api_view(['GET', 'POST'])
+def obtener_categorias_presentaciones(request):
+    """GET o POST /api/categorias-presentaciones/"""
+    try:
+        cp_id = _extract_id_from_request(request, CategoriaPresentacionRequest)
+        params = {'@id': int(cp_id)} if cp_id is not None else None
+        result = execute_sp('dbo.sp_ObtenerCategoriasPresentaciones', params)
+        return Response(result, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'Exito': False, 'Mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    request=MarcaRequest,
+    responses={200: MarcaResponse(many=True)},
+    tags=['Productos'],
+    description='Obtiene todas las marcas registradas en dbo.Marcas mediante dbo.sp_ObtenerMarcas.'
+)
+@api_view(['GET', 'POST'])
+def obtener_marcas(request):
+    """GET o POST /api/marcas/"""
+    try:
+        marca_id = _extract_id_from_request(request, MarcaRequest)
+        params = {'@id': int(marca_id)} if marca_id is not None else None
+        result = execute_sp('dbo.sp_ObtenerMarcas', params)
+        return Response(result, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'Exito': False, 'Mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

@@ -306,3 +306,45 @@ BEGIN
     WHERE LOWER(c.Usuario) = LOWER(LTRIM(RTRIM(@Usuario)));
 END;
 GO
+
+-- ============================================================================
+-- 8. OBTENER CATEGORÍAS Y PRESENTACIONES (JOIN CategoriaPresentacion + Categoria + Presentacion)
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.sp_ObtenerCategoriasPresentaciones
+    @id BIGINT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        cp.[id],
+        cp.[idCategoria],
+        c.[Nombre] AS CategoriaNombre,
+        cp.[idPresentacion],
+        p.[NombreTipo] AS PresentacionNombre,
+        c.[Nombre] + ' - ' + p.[NombreTipo] AS NombreCompleto
+    FROM [dbo].[CategoriaPresentacion] cp
+    INNER JOIN [dbo].[Categoria] c ON c.[id] = cp.[idCategoria]
+    INNER JOIN [dbo].[Presentacion] p ON p.[id] = cp.[idPresentacion]
+    WHERE (@id IS NULL OR cp.[id] = @id)
+    ORDER BY c.[Nombre], p.[NombreTipo];
+END;
+GO
+
+-- ============================================================================
+-- 9. OBTENER MARCAS
+-- ============================================================================
+CREATE OR ALTER PROCEDURE dbo.sp_ObtenerMarcas
+    @id BIGINT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        m.[id],
+        m.[Nombre]
+    FROM [dbo].[Marcas] m
+    WHERE (@id IS NULL OR m.[id] = @id)
+    ORDER BY m.[Nombre];
+END;
+GO

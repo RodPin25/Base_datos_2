@@ -284,6 +284,28 @@ class ProductoResponse(serializers.Serializer):
     idProveedor = serializers.IntegerField()
 
 
+class CategoriaPresentacionRequest(serializers.Serializer):
+    id = serializers.IntegerField(required=False, default=None, allow_null=True, help_text="ID de Categoría-Presentación a consultar (opcional)")
+
+
+class CategoriaPresentacionResponse(serializers.Serializer):
+    id = serializers.IntegerField()
+    idCategoria = serializers.IntegerField()
+    CategoriaNombre = serializers.CharField()
+    idPresentacion = serializers.IntegerField()
+    PresentacionNombre = serializers.CharField()
+    NombreCompleto = serializers.CharField()
+
+
+class MarcaRequest(serializers.Serializer):
+    id = serializers.IntegerField(required=False, default=None, allow_null=True, help_text="ID de la marca a consultar (opcional)")
+
+
+class MarcaResponse(serializers.Serializer):
+    id = serializers.IntegerField()
+    Nombre = serializers.CharField()
+
+
 # =============================================================================
 # FACTURACIÓN (dbo.sp_GenerarFactura & dbo.DetalleTransaccionUDT)
 # =============================================================================

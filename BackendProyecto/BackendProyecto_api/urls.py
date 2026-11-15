@@ -40,11 +40,13 @@ urlpatterns = [
     path('proveedores/actualizar/', views.actualizar_proveedor, name='actualizar_proveedor'),
     path('proveedores/eliminar/', views.eliminar_proveedor, name='eliminar_proveedor'),
 
-    # Productos
+    # Productos, Categorías-Presentaciones y Marcas
     path('productos/', views.obtener_productos, name='obtener_productos'),
     path('productos/crear/', views.crear_producto, name='crear_producto'),
     path('productos/actualizar/', views.actualizar_producto, name='actualizar_producto'),
     path('productos/eliminar/', views.eliminar_producto, name='eliminar_producto'),
+    path('categorias-presentaciones/', views.obtener_categorias_presentaciones, name='obtener_categorias_presentaciones'),
+    path('marcas/', views.obtener_marcas, name='obtener_marcas'),
 
     # Cotizaciones
     path('cotizaciones/', views.obtener_cotizaciones, name='obtener_cotizaciones'),
