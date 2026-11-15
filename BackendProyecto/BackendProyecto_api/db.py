@@ -99,14 +99,15 @@ def execute_sp(sp_name: str, params: dict | None = None, udt_params: dict | None
 
         if udt_params:
             sql_statements = ["SET NOCOUNT ON;"]
-            sql_values = []
+            udt_values = []
+            exec_values = []
             exec_assignments = []
 
             if params:
                 for key, val in params.items():
                     param_name = key if key.startswith('@') else f'@{key}'
                     exec_assignments.append(f'{param_name} = ?')
-                    sql_values.append(_normalize_param_value(val))
+                    exec_values.append(_normalize_param_value(val))
 
             for idx, (key, udt_info) in enumerate(udt_params.items()):
                 param_name = key if key.startswith('@') else f'@{key}'
@@ -125,9 +126,9 @@ def execute_sp(sp_name: str, params: dict | None = None, udt_params: dict | None
                         sql_statements.append(f"INSERT INTO {var_name} ({cols_sql}) VALUES {values_sql};")
                         for row in chunk:
                             if isinstance(row, dict):
-                                sql_values.extend(_normalize_param_value(row[col]) for col in columns)
+                                udt_values.extend(_normalize_param_value(row[col]) for col in columns)
                             else:
-                                sql_values.extend(_normalize_param_value(v) for v in row)
+                                udt_values.extend(_normalize_param_value(v) for v in row)
 
                 exec_assignments.append(f'{param_name} = {var_name}')
 
@@ -138,7 +139,7 @@ def execute_sp(sp_name: str, params: dict | None = None, udt_params: dict | None
                 sql_statements.append(f'EXEC {qualified_sp};')
 
             sql = '\n'.join(sql_statements)
-            cursor.execute(sql, sql_values)
+            cursor.execute(sql, udt_values + exec_values)
         elif params:
             placeholders = ', '.join(
                 f"{key if key.startswith('@') else '@' + key} = ?"

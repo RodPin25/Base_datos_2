@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from rest_framework.test import APIClient
+from .db import execute_sp
 from .security import hasher, crear_token_acceso
 
 
@@ -103,6 +104,15 @@ class BackendProyectoApiTests(SimpleTestCase):
         self.assertEqual(res_ing.data['IdIngresoGenerado'], 4)
         self.assertEqual(res_ing.data['EstadoOrden'], 'Completa')
 
+        # También debe aceptar el alias singular 'DetalleIngreso'
+        res_ing_alias = self.client.post('/api/bodega/ingreso/', {
+            'IdOrdenCompra': 5,
+            'IdEmpleado': 1,
+            'IdSede': 1,
+            'DetalleIngreso': [{'IdProducto': 1, 'CantidadIngresada': 1}],
+        }, format='json')
+        self.assertEqual(res_ing_alias.status_code, 201)
+
     @patch('BackendProyecto_api.views.execute_sp')
     def test_anular_factura_y_obtener_anulaciones(self, mock_sp):
         mock_sp.return_value = [{
@@ -171,3 +181,53 @@ class BackendProyectoApiTests(SimpleTestCase):
         # Filtro inválido debe devolver 400
         res_bad = self.client.get('/api/reportes/productos-mas-vendidos/?Top=0', HTTP_AUTHORIZATION=auth_header)
         self.assertEqual(res_bad.status_code, 400)
+
+    @patch('BackendProyecto_api.views.execute_sp')
+    def test_obtener_ordenes_compra_y_detalle(self, mock_sp):
+        mock_sp.return_value = [{'id': 5, 'ProveedorNombre': 'Pinturas S.A.', 'Estado': 'Pendiente'}]
+        res_all = self.client.get('/api/ordenes-compra/')
+        self.assertEqual(res_all.status_code, 200)
+        mock_sp.assert_called_with('dbo.sp_ObtenerOrdenesCompra', None)
+
+        res_one = self.client.post('/api/ordenes-compra/', {'id': 5}, format='json')
+        self.assertEqual(res_one.status_code, 200)
+        mock_sp.assert_called_with('dbo.sp_ObtenerOrdenesCompra', {'@id': 5})
+
+        mock_sp.side_effect = [
+            [{'id': 5, 'ProveedorNombre': 'Pinturas S.A.', 'Estado': 'Pendiente'}],
+            [{'id': 1, 'idCompra': 5, 'idProducto': 1, 'Descripcion': 'Pintura Látex', 'Cantidad': 10, 'Unidades': 0, 'Pendientes': 10}],
+        ]
+        res_det = self.client.get('/api/ordenes-compra/detalle/?id=5')
+        self.assertEqual(res_det.status_code, 200)
+        self.assertTrue(res_det.data['Exito'])
+        self.assertEqual(res_det.data['orden_compra']['id'], 5)
+        self.assertEqual(len(res_det.data['detalles']), 1)
+
+    @patch('BackendProyecto_api.db.get_connection')
+    def test_execute_sp_udt_param_order(self, mock_get_conn):
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.description = [('IdOrdenCompraGenerada',)]
+        mock_cursor.fetchall.return_value = [(10,)]
+        mock_conn.cursor.return_value = mock_cursor
+        mock_get_conn.return_value = mock_conn
+
+        res = execute_sp(
+            'dbo.sp_RealizarOrdenCompra',
+            params={'@IdProveedor': 1, '@IdEmpleado': 2},
+            udt_params={
+                '@Detalles': {
+                    'type_name': 'dbo.DetalleCompraUDT',
+                    'columns': ['IdProducto', 'Cantidad', 'PrecioCosto'],
+                    'rows': [
+                        {'IdProducto': 7, 'Cantidad': 10, 'PrecioCosto': 450.0},
+                        {'IdProducto': 8, 'Cantidad': 5, 'PrecioCosto': 120.5},
+                    ],
+                }
+            },
+        )
+        self.assertEqual(res, [{'IdOrdenCompraGenerada': 10}])
+        executed_sql, executed_params = mock_cursor.execute.call_args[0]
+        # Los VALUES del INSERT van antes que el EXEC, así que sus valores deben ir primero
+        self.assertEqual(executed_params, [7, 10, 450.0, 8, 5, 120.5, 1, 2])
+        self.assertLess(executed_sql.index('INSERT INTO'), executed_sql.index('EXEC'))

@@ -329,3 +329,71 @@ BEGIN
     END CATCH
 END;
 GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_ObtenerOrdenesCompra
+    @id BIGINT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        cp.[id],
+        cp.[idProveedor],
+        ISNULL(prov.[Codigo], '') AS ProveedorCodigo,
+        ISNULL(prov.[Nombre], 'Proveedor') AS ProveedorNombre,
+        cp.[idEmpleado],
+        ISNULL(e.[Nombres] + ' ' + e.[Apellidos], 'Empleado') AS EmpleadoNombre,
+        CONVERT(VARCHAR(10), cp.[Fecha], 23) AS Fecha,
+        cp.[MontoTotal],
+        ISNULL(tot.[TotalSolicitado], 0) AS TotalSolicitado,
+        ISNULL(tot.[TotalRecibido], 0) AS TotalRecibido,
+        CASE
+            WHEN ISNULL(tot.[TotalRecibido], 0) <= 0 THEN 'Pendiente'
+            WHEN ISNULL(tot.[TotalRecibido], 0) >= ISNULL(tot.[TotalSolicitado], 0) THEN 'Completa'
+            ELSE 'Parcial'
+        END AS Estado
+    FROM [dbo].[CompraProveedor] cp
+    LEFT JOIN [dbo].[Proveedores] prov ON prov.[id] = cp.[idProveedor]
+    LEFT JOIN [dbo].[Empleados] e ON e.[id] = cp.[idEmpleado]
+    OUTER APPLY (
+        SELECT
+            ISNULL(SUM(cpi.[Cantidad]), 0) AS TotalSolicitado,
+            ISNULL(SUM(cpi.[Unidades]), 0) AS TotalRecibido
+        FROM [dbo].[CompraProveedorItem] cpi
+        WHERE cpi.[idCompra] = cp.[id]
+    ) tot
+    WHERE (@id IS NULL OR cp.[id] = @id)
+    ORDER BY cp.[id] DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_ObtenerDetalleOrdenCompra
+    @IdOrdenCompra BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        cpi.[id],
+        cpi.[idCompra],
+        p.[id] AS idProducto,
+        cpi.[Descripcion],
+        cpi.[Cantidad],
+        cpi.[PrecioUnitario],
+        cpi.[Unidades],
+        CASE
+            WHEN cpi.[Cantidad] - cpi.[Unidades] > 0 THEN cpi.[Cantidad] - cpi.[Unidades]
+            ELSE 0
+        END AS Pendientes,
+        cpi.[Subtotal]
+    FROM [dbo].[CompraProveedorItem] cpi
+    OUTER APPLY (
+        SELECT TOP 1 prod.[id]
+        FROM [dbo].[Productos] prod
+        WHERE prod.[Nombre] = cpi.[Descripcion]
+        ORDER BY prod.[id]
+    ) p
+    WHERE cpi.[idCompra] = @IdOrdenCompra
+    ORDER BY cpi.[id];
+END;
+GO

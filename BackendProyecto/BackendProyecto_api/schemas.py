@@ -423,6 +423,24 @@ class RealizarOrdenCompraResponse(serializers.Serializer):
     Mensaje = serializers.CharField()
 
 
+class OrdenCompraRequest(serializers.Serializer):
+    id = serializers.IntegerField(required=False, default=None, allow_null=True, help_text="ID de la orden de compra a consultar (opcional)")
+
+
+class OrdenCompraResponse(serializers.Serializer):
+    id = serializers.IntegerField()
+    idProveedor = serializers.IntegerField()
+    ProveedorCodigo = serializers.CharField()
+    ProveedorNombre = serializers.CharField()
+    idEmpleado = serializers.IntegerField()
+    EmpleadoNombre = serializers.CharField()
+    Fecha = serializers.CharField()
+    MontoTotal = serializers.FloatField()
+    TotalSolicitado = serializers.IntegerField()
+    TotalRecibido = serializers.IntegerField()
+    Estado = serializers.CharField()
+
+
 # =============================================================================
 # INGRESOS A BODEGA (dbo.sp_IngresoBodega & dbo.DetalleIngresoUDT)
 # =============================================================================
@@ -451,6 +469,11 @@ class IngresoBodegaRequest(serializers.Serializer):
         allow_empty=False,
         help_text="Detalle de productos ingresados a bodega (dbo.DetalleIngresoUDT)",
     )
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict) and 'DetallesIngreso' not in data and 'DetalleIngreso' in data:
+            data = {**data, 'DetallesIngreso': data['DetalleIngreso']}
+        return super().to_internal_value(data)
 
 
 class IngresoBodegaResponse(serializers.Serializer):

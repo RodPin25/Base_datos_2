@@ -63,6 +63,8 @@ urlpatterns = [
     path('medios-pago/', views.obtener_medios_pago, name='obtener_medios_pago'),
 
     # Órdenes de Compra y Bodega
+    path('ordenes-compra/', views.obtener_ordenes_compra, name='obtener_ordenes_compra'),
+    path('ordenes-compra/detalle/', views.obtener_detalle_orden_compra, name='obtener_detalle_orden_compra'),
     path('ordenes-compra/crear/', views.realizar_orden_compra, name='realizar_orden_compra'),
     path('bodega/ingreso/', views.registrar_ingreso_bodega, name='registrar_ingreso_bodega'),
 

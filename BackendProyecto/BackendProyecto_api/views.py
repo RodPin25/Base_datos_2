@@ -60,6 +60,8 @@ from .schemas import (
     MedioPagoResponse,
     RealizarOrdenCompraRequest,
     RealizarOrdenCompraResponse,
+    OrdenCompraRequest,
+    OrdenCompraResponse,
     IngresoBodegaRequest,
     IngresoBodegaResponse,
     AnularFacturaRequest,
@@ -1177,6 +1179,49 @@ def obtener_medios_pago(request):
 # =============================================================================
 # ÓRDENES DE COMPRA Y BODEGA (Script-UDP3.sql: dbo.sp_RealizarOrdenCompra & dbo.sp_IngresoBodega)
 # =============================================================================
+
+@extend_schema(
+    request=OrdenCompraRequest,
+    responses={200: OrdenCompraResponse(many=True)},
+    tags=['Compras y Bodega'],
+    description='Consulta órdenes de compra a proveedores mediante dbo.sp_ObtenerOrdenesCompra.'
+)
+@api_view(['GET', 'POST'])
+def obtener_ordenes_compra(request):
+    """GET o POST /api/ordenes-compra/"""
+    try:
+        orden_id = _extract_id_from_request(request, OrdenCompraRequest)
+        params = {'@id': int(orden_id)} if orden_id is not None else None
+        result = execute_sp('dbo.sp_ObtenerOrdenesCompra', params)
+        return Response(result, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'Exito': False, 'Mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    tags=['Compras y Bodega'],
+    description='Obtiene el encabezado y los ítems detallados de una orden de compra específica.'
+)
+@api_view(['GET', 'POST'])
+def obtener_detalle_orden_compra(request):
+    """GET o POST /api/ordenes-compra/detalle/?id=1"""
+    try:
+        orden_id = _extract_id_from_request(request, OrdenCompraRequest)
+        if orden_id is None:
+            return Response(
+                {'Exito': False, 'Mensaje': 'Debe proporcionar el ID de la orden de compra.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        header = execute_sp('dbo.sp_ObtenerOrdenesCompra', {'@id': int(orden_id)})
+        items = execute_sp('dbo.sp_ObtenerDetalleOrdenCompra', {'@IdOrdenCompra': int(orden_id)})
+        return Response({
+            'Exito': True,
+            'orden_compra': header[0] if header else None,
+            'detalles': items,
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'Exito': False, 'Mensaje': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @extend_schema(
     request=RealizarOrdenCompraRequest,
