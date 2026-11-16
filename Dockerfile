@@ -7,8 +7,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# Variable de entorno de Vite para la URL de la API del Backend
-ARG VITE_API_URL=http://localhost:8000/api
+# Variable de entorno de Vite para la API (ruta relativa para proxy inverso)
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 # Copiar el código fuente y compilar los archivos estáticos
@@ -18,7 +18,7 @@ RUN npm run build
 # Etapa 2: Servidor web ultraligero Nginx
 FROM nginx:alpine
 
-# Copiar configuración personalizada de Nginx para escuchar en puerto 5173
+# Copiar configuración personalizada de Nginx con Reverse Proxy para /api/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copiar el bundle estático compilado desde la etapa de build
