@@ -5,7 +5,9 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/ap
  * Normaliza la URL agregando pleca final si no la tiene (requerido por Django)
  */
 const normalizeUrl = (url) => {
-  return url.endsWith('/') ? url : `${url}/`;
+  const [path, query] = url.split('?');
+  const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+  return query !== undefined ? `${normalizedPath}?${query}` : normalizedPath;
 };
 
 /**
