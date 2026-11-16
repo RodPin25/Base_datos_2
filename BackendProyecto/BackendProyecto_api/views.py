@@ -192,24 +192,32 @@ def crear_sede(request):
     request=SedeRequest,
     responses={200: SedeResponse(many=True)},
     tags=['Sedes'],
-    description='Consulta sedes mediante payload SedeRequest (ej: {"id": 1} para específica, o {} para todas).'
+    description='Consulta sedes mediante GET o payload SedeRequest (ej: {"id": 1} para específica, o {} para todas).'
 )
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def obtener_sedes(request):
     """
-    POST /api/sedes/
-    Payload: {"id": 1}  -> devuelve sede específica
-    Payload: {}         -> devuelve todas las sedes
+    GET /api/sedes/?id=1  o  GET /api/sedes/
+    POST /api/sedes/ con Payload: {"id": 1} o {}
     """
-    data = request.data if isinstance(request.data, dict) else {}
-    serializer = SedeRequest(data=data)
-    if not serializer.is_valid():
-        return Response(
-            {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    sede_id = None
+    if request.method == 'GET':
+        param_id = request.query_params.get('id')
+        if param_id:
+            try:
+                sede_id = int(param_id)
+            except ValueError:
+                return Response({'Exito': False, 'Mensaje': 'ID inválido'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        data = request.data if isinstance(request.data, dict) else {}
+        serializer = SedeRequest(data=data)
+        if not serializer.is_valid():
+            return Response(
+                {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        sede_id = serializer.validated_data.get('id')
 
-    sede_id = serializer.validated_data.get('id')
     try:
         params = {'@id': int(sede_id)} if sede_id is not None else None
         result = execute_sp('dbo.sp_ObtenerSedes', params)
@@ -260,24 +268,32 @@ def crear_rol(request):
     request=RolRequest,
     responses={200: RolResponse(many=True)},
     tags=['Roles'],
-    description='Consulta roles mediante payload RolRequest (ej: {"id": 1} para específico, o {} para todos).'
+    description='Consulta roles mediante GET o payload RolRequest (ej: {"id": 1} para específico, o {} para todos).'
 )
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def obtener_roles(request):
     """
-    POST /api/roles/
-    Payload: {"id": 1}  -> devuelve rol específico
-    Payload: {}         -> devuelve todos los roles
+    GET /api/roles/?id=1  o  GET /api/roles/
+    POST /api/roles/ con Payload: {"id": 1} o {}
     """
-    data = request.data if isinstance(request.data, dict) else {}
-    serializer = RolRequest(data=data)
-    if not serializer.is_valid():
-        return Response(
-            {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    rol_id = None
+    if request.method == 'GET':
+        param_id = request.query_params.get('id')
+        if param_id:
+            try:
+                rol_id = int(param_id)
+            except ValueError:
+                return Response({'Exito': False, 'Mensaje': 'ID inválido'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        data = request.data if isinstance(request.data, dict) else {}
+        serializer = RolRequest(data=data)
+        if not serializer.is_valid():
+            return Response(
+                {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        rol_id = serializer.validated_data.get('id')
 
-    rol_id = serializer.validated_data.get('id')
     try:
         params = {'@id': int(rol_id)} if rol_id is not None else None
         result = execute_sp('dbo.sp_ObtenerRoles', params)
@@ -337,24 +353,32 @@ def crear_empleado(request):
     request=EmpleadoRequest,
     responses={200: EmpleadoResponse(many=True)},
     tags=['Empleados'],
-    description='Consulta empleados mediante payload EmpleadoRequest (ej: {"id": 1} para específico, o {} para todos).'
+    description='Consulta empleados mediante GET o payload EmpleadoRequest (ej: {"id": 1} para específico, o {} para todos).'
 )
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 def obtener_empleados(request):
     """
-    POST /api/empleados/
-    Payload: {"id": 1}  -> devuelve empleado específico
-    Payload: {}         -> devuelve todos los empleados
+    GET /api/empleados/?id=1  o  GET /api/empleados/
+    POST /api/empleados/ con Payload: {"id": 1} o {}
     """
-    data = request.data if isinstance(request.data, dict) else {}
-    serializer = EmpleadoRequest(data=data)
-    if not serializer.is_valid():
-        return Response(
-            {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    emp_id = None
+    if request.method == 'GET':
+        param_id = request.query_params.get('id')
+        if param_id:
+            try:
+                emp_id = int(param_id)
+            except ValueError:
+                return Response({'Exito': False, 'Mensaje': 'ID inválido'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        data = request.data if isinstance(request.data, dict) else {}
+        serializer = EmpleadoRequest(data=data)
+        if not serializer.is_valid():
+            return Response(
+                {'Exito': False, 'Mensaje': 'Payload inválido', 'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        emp_id = serializer.validated_data.get('id')
 
-    emp_id = serializer.validated_data.get('id')
     try:
         params = {'@id': int(emp_id)} if emp_id is not None else None
         result = execute_sp('dbo.sp_ObtenerEmpleados', params)

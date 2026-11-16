@@ -14,7 +14,7 @@ DB_NAME = os.getenv('DB_NAME', 'ProyectoFinal').strip('"\'')
 
 
 def get_connection():
-    """Abre y devuelve una conexión pyodbc a SQL Server asegurando el contexto de BD."""
+    """Abre y devuelve una conexión pyodbc a SQL Server asegurando el contexto de BD"""
     conn_str = os.getenv('DATABASE_URL', '')
     if conn_str:
         conn_str = conn_str.strip('"\'')
@@ -37,7 +37,7 @@ def get_connection():
 def execute_sp(sp_name: str, params: dict | None = None):
     """
     Ejecuta un Stored Procedure en la base de datos asegurando nombre calificado de 3 partes:
-    [ProyectoFinal].[dbo].[sp_nombre] para evitar que SQL Server busque en master.
+    [ProyectoFinal].[dbo].[sp_nombre] para evitar que SQL Server busque en master
     """
     # Extraer el nombre base del SP (limpia prefijos como dbo. o ProyectoFinal.dbo.)
     clean_sp_name = sp_name.split('.')[-1]
