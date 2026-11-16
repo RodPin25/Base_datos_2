@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from '../../../shared/components/Icon';
 import { money } from '../../../shared/utils/formatters';
 import { downloadDocumentFile, printDocumentPdf } from '../../../utils/invoiceDownload';
@@ -241,6 +241,165 @@ export function DocumentPreviewModal({ previewDoc, onClose }) {
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export function VoidInvoiceModal({
+  isOpen,
+  invoices,
+  submitting,
+  onClose,
+  onConfirm,
+}) {
+  const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState(null);
+  const [motivo, setMotivo] = useState('');
+
+  if (!isOpen) return null;
+
+  const activeInvoices = (invoices || []).filter((inv) => inv.status !== 'Anulada');
+  const filtered = activeInvoices.filter((inv) =>
+    `${inv.number} ${inv.client} ${inv.NIT || ''}`
+      .toLowerCase()
+      .includes(search.trim().toLowerCase())
+  );
+
+  const selectedInvoice = activeInvoices.find((inv) => inv.id === selectedId) || null;
+
+  const handleClose = () => {
+    if (submitting) return;
+    setSearch('');
+    setSelectedId(null);
+    setMotivo('');
+    onClose();
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedInvoice || submitting) return;
+    onConfirm({
+      idFactura: selectedInvoice.id,
+      numero: selectedInvoice.number,
+      motivo: motivo.trim() || null,
+    });
+  };
+
+  return (
+    <div className="modal-overlay" onClick={handleClose}>
+      <div className="modal-card" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
+        <h3>Anular Factura</h3>
+        <p style={{ fontSize: '12px', color: '#687384', marginTop: '-10px', marginBottom: '14px' }}>
+          Busca por número de factura (ej. <code>FAC-000003</code>) o cliente y selecciónala.
+          Al confirmar, el monto quedará en <strong>Q0.00</strong> y se revertirá el inventario.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Buscar número de factura</label>
+            <input
+              type="text"
+              placeholder="Ej: FAC-000003 o nombre del cliente..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              disabled={submitting}
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Seleccionar factura ({filtered.length} disponibles)</label>
+            <div
+              style={{
+                maxHeight: '210px',
+                overflowY: 'auto',
+                border: '1px solid #dfe5ef',
+                borderRadius: '10px',
+                background: '#f8fafd',
+              }}
+            >
+              {filtered.length === 0 ? (
+                <div style={{ padding: '16px', textAlign: 'center', fontSize: '13px', color: '#687384' }}>
+                  No hay facturas activas que coincidan con la búsqueda.
+                </div>
+              ) : (
+                filtered.map((inv) => {
+                  const isSelected = inv.id === selectedId;
+                  return (
+                    <button
+                      key={inv.id}
+                      type="button"
+                      onClick={() => setSelectedId(inv.id)}
+                      disabled={submitting}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        border: 0,
+                        borderBottom: '1px solid #e7edf6',
+                        background: isSelected ? '#eef2ff' : 'transparent',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: isSelected ? '#3730a3' : '#18212f', fontSize: '13px' }}>
+                          {inv.number}
+                        </strong>
+                        <div style={{ fontSize: '12px', color: '#5c6677' }}>
+                          {inv.client} · {inv.date}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <strong style={{ color: '#18212f', fontSize: '13px' }}>
+                          {money(inv.total)}
+                        </strong>
+                        <div style={{ fontSize: '11px', color: '#687384' }}>
+                          {inv.status}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Motivo de anulación (Opcional)</label>
+            <input
+              type="text"
+              placeholder="Ej: Error en facturación o devolución de cliente"
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClose}
+              disabled={submitting}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={!selectedInvoice || submitting}
+              style={{ background: '#d9414f', borderColor: '#d9414f' }}
+            >
+              <Icon name="close" size={15} />
+              {submitting ? 'Anulando...' : 'Confirmar Anulación'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

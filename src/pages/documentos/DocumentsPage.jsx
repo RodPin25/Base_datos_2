@@ -12,6 +12,7 @@ import {
   getDetalleFactura,
   generarFactura,
   registrarPago,
+  anularFactura,
 } from '../../services/facturacionService';
 import { downloadDocumentFile, printDocumentPdf } from '../../utils/invoiceDownload';
 import DocumentSummary from './components/DocumentSummary';
@@ -20,6 +21,7 @@ import {
   GenerateInvoiceModal,
   RegisterPaymentModal,
   DocumentPreviewModal,
+  VoidInvoiceModal,
 } from './components/DocumentModals';
 
 export default function DocumentsPage({ kind, startCreating = false }) {
@@ -50,6 +52,8 @@ export default function DocumentsPage({ kind, startCreating = false }) {
   const [registeringPay, setRegisteringPay] = useState(false);
 
   const [previewDoc, setPreviewDoc] = useState(null);
+  const [voidModalOpen, setVoidModalOpen] = useState(false);
+  const [voidingInvoice, setVoidingInvoice] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -225,6 +229,28 @@ export default function DocumentsPage({ kind, startCreating = false }) {
     }
   };
 
+  const handleConfirmVoid = async ({ idFactura, numero, motivo }) => {
+    try {
+      setVoidingInvoice(true);
+      setErrorMsg('');
+      const resp = await anularFactura({
+        IdFactura: idFactura,
+        Motivo: motivo,
+      });
+      setSuccess(
+        resp?.Mensaje ||
+          `Factura ${resp?.CodigoFactura || numero} anulada exitosamente. Monto actualizado a Q0.00 y stock revertido.`
+      );
+      setVoidModalOpen(false);
+      await loadData();
+    } catch (err) {
+      setErrorMsg(err.message || 'No se pudo anular la factura.');
+      setVoidModalOpen(false);
+    } finally {
+      setVoidingInvoice(false);
+    }
+  };
+
   if (creating) {
     return (
       <DocumentForm
@@ -269,10 +295,23 @@ export default function DocumentsPage({ kind, startCreating = false }) {
               : 'Emite facturas, registra pagos y descarga tus documentos tributarios.'}
           </p>
         </div>
-        <button className="primary-button" type="button" onClick={() => setCreating(true)}>
-          <Icon name="plus" size={18} />
-          {isQuotes ? 'Nueva cotización' : 'Generar factura'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {!isQuotes && (
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={() => setVoidModalOpen(true)}
+              style={{ color: '#d9414f', borderColor: 'rgba(217, 65, 79, 0.35)' }}
+            >
+              <Icon name="close" size={16} />
+              Anular factura
+            </button>
+          )}
+          <button className="primary-button" type="button" onClick={() => setCreating(true)}>
+            <Icon name="plus" size={18} />
+            {isQuotes ? 'Nueva cotización' : 'Generar factura'}
+          </button>
+        </div>
       </div>
 
       {success && (
@@ -333,6 +372,7 @@ export default function DocumentsPage({ kind, startCreating = false }) {
                   <option>Pagada</option>
                   <option>Pago Parcial</option>
                   <option>Pendiente</option>
+                  <option>Anulada</option>
                 </>
               )}
             </select>
@@ -547,6 +587,16 @@ export default function DocumentsPage({ kind, startCreating = false }) {
         previewDoc={previewDoc}
         onClose={() => setPreviewDoc(null)}
       />
+
+      {!isQuotes && (
+        <VoidInvoiceModal
+          isOpen={voidModalOpen}
+          invoices={items}
+          submitting={voidingInvoice}
+          onClose={() => setVoidModalOpen(false)}
+          onConfirm={handleConfirmVoid}
+        />
+      )}
     </section>
   );
 }

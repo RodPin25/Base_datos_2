@@ -124,19 +124,19 @@ export const getAnulacionesId = async ({ id }) =>{
 export const anularFactura = async ({
   IdFactura,
   Motivo = null,
-  IdEmpleado,
-  IdSede
+  IdEmpleado = null,
+  IdSede = null,
 }) => {
-  return await apiFetch('/facturas/anular/',{
-    method:'POST',
+  return await apiFetch('/facturas/anular/', {
+    method: 'POST',
     body: JSON.stringify({
       IdFactura: Number(IdFactura),
-      ...(Motivo ? { Motivo: Motivo } : {}), 
-      IdEmpleado:Number(IdEmpleado),
-      IdSede: Number(IdSede)
-    })
-  })
-}
+      ...(Motivo ? { Motivo } : {}),
+      ...(IdEmpleado ? { IdEmpleado: Number(IdEmpleado) } : {}),
+      ...(IdSede ? { IdSede: Number(IdSede) } : {}),
+    }),
+  });
+};
 
 /**
  * Registra el pago de una factura (dbo.sp_RegistrarPago)
